@@ -6,15 +6,30 @@ from pathlib import Path
 
 from ciscoconfparse2 import CiscoConfParse
 
-from c3.loader import load_policies
+from c3.loader import load_rules
 from c3.evaluator import evaluate_rule
 
 
 def evaluate_config(config_file, policy_file):
+    """Evaluate a Cisco IOS config file against a policy file.
+
+    Parses the config, loads all rules from the policy, runs each rule through
+    the evaluator, and aggregates the results into a compliance report.
+
+    Args:
+        config_file (Path): Path to the Cisco IOS .cfg file.
+        policy_file (Path): Path to the YAML policy file.
+
+    Returns:
+        dict: Compliance report with keys:
+            - device (str): Stem of the config filename.
+            - status (str): Worst severity seen ("ok", "warning", or "critical").
+            - violations (list[dict]): Serialised Violation instances.
+    """
 
     parse = CiscoConfParse(str(config_file))
 
-    rules = load_policies(policy_file)
+    rules = load_rules(policy_file)
 
     violations = []
 
@@ -24,13 +39,9 @@ def evaluate_config(config_file, policy_file):
             evaluate_rule(parse, rule)
         )
 
-    score = 100
-
     overall_status = "ok"
 
     for violation in violations:
-
-        score -= violation["score_impact"]
 
         if violation["severity"] == "critical":
             overall_status = "critical"
@@ -41,12 +52,9 @@ def evaluate_config(config_file, policy_file):
         ):
             overall_status = "warning"
 
-    score = max(score, 0)
-
     result = {
         "device": config_file.stem,
         "status": overall_status,
-        "score": score,
         "violations": violations,
     }
 
@@ -54,6 +62,15 @@ def evaluate_config(config_file, policy_file):
 
 
 def main():
+    """Entry point for the CLI.
+
+    Expects exactly two positional arguments: the path to a Cisco IOS config
+    file and the path to a YAML policy file. Prints the compliance report as
+    indented JSON to stdout.
+
+    Returns:
+        None
+    """
 
     if len(sys.argv) != 3:
         print(

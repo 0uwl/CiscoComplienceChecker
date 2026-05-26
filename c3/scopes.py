@@ -6,6 +6,24 @@ def get_scope_objects(
     parse: CiscoConfParse,
     scope: str,
 ) -> list[IOSCfgLine]:
+    """Return the top-level config objects that fall within the given scope.
+
+    Named scopes map to fixed regex anchors; any other value is treated as a
+    literal regex prefix anchored to the start of the line.
+
+    Named scopes:
+        - "global"     → lines matching ``^hostname``
+        - "interfaces" → lines matching ``^interface ``
+        - "vty"        → lines matching ``^line vty``
+        - <other>      → lines matching ``^<scope>``
+
+    Args:
+        parse (CiscoConfParse): Parsed representation of the IOS config file.
+        scope (str): Scope name or arbitrary regex prefix.
+
+    Returns:
+        list[IOSCfgLine]: Matching top-level config line objects.
+    """
 
     match scope:
 

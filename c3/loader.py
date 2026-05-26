@@ -6,9 +6,21 @@ from c3.types import (
 )
 
 
-def load_policies(
+def load_rules(
     policy_file: str,
 ) -> list[Rule]:
+    """Load and normalise all rules from a YAML policy file.
+
+    Reads the policy YAML and flattens the nested structure
+    (policies → required|forbidden → policy_name → rules) into a flat list
+    of Rule dataclass instances ready for evaluation.
+
+    Args:
+        policy_file (str): Path to the YAML policy file.
+
+    Returns:
+        list[Rule]: Flat list of normalised Rule instances.
+    """
 
     with open(policy_file) as f:
         raw = yaml.safe_load(f)
@@ -23,13 +35,7 @@ def load_policies(
 
             scope = policy_data["scope"]
 
-            for rule_entry in policy_data.get("rules", []):
-
-                rule_name = list(
-                    rule_entry.keys()
-                )[0]
-
-                rule_data = rule_entry[rule_name]
+            for rule_name, rule_data in policy_data.get("rules", {}).items():
 
                 rule = Rule(
                     policy_type=policy_type,

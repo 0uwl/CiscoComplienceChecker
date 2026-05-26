@@ -5,12 +5,12 @@ from c3.evaluator import (
 
 def test_compliant_rule(
     compliant_config,
-    policies,
+    rules,
 ):
 
     aaa_rule = next(
         r
-        for r in policies
+        for r in rules
         if r.rule_name == "aaa-model"
     )
 
@@ -24,18 +24,18 @@ def test_compliant_rule(
 
 def test_telnet_violation(
     telnet_config,
-    policies,
+    rules,
 ):
 
-    telnet_rule = next(
+    aaa_rule = next(
         r
-        for r in policies
+        for r in rules
         if r.rule_name == "no-telnet"
     )
 
     violations = evaluate_rule(
         telnet_config,
-        telnet_rule,
+        aaa_rule,
     )
 
     assert len(violations) == 1

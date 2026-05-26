@@ -4,7 +4,7 @@ import pytest
 
 from ciscoconfparse2 import CiscoConfParse
 
-from c3.loader import load_policies
+from c3.loader import load_rules
 
 
 BASE_DIR = Path(__file__).parent
@@ -24,6 +24,18 @@ def compliant_config():
 
 
 @pytest.fixture
+def client_access_ports_config():
+
+    return CiscoConfParse(
+        str(
+            BASE_DIR
+            / "fixtures"
+            / "configs"
+            / "client_ports.cfg"
+        )
+    )
+    
+@pytest.fixture
 def telnet_config():
 
     return CiscoConfParse(
@@ -37,9 +49,9 @@ def telnet_config():
 
 
 @pytest.fixture
-def policies():
+def rules():
 
-    return load_policies(
+    return load_rules(
         str(
             BASE_DIR
             / "fixtures"
