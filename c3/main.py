@@ -8,6 +8,7 @@ from ciscoconfparse2 import CiscoConfParse
 
 from c3.loader import load_rules
 from c3.evaluator import evaluate_rule
+from c3.types import Violation, Severity, SEVERITY_WEIGHTS
 
 
 def evaluate_config(config_file, policy_file):
@@ -31,7 +32,7 @@ def evaluate_config(config_file, policy_file):
 
     rules = load_rules(policy_file)
 
-    violations = []
+    violations: list[Violation] = []
 
     for rule in rules:
 
@@ -43,19 +44,22 @@ def evaluate_config(config_file, policy_file):
 
     for violation in violations:
 
-        if violation["severity"] == "critical":
+        if violation.severity == Severity.CRITICAL:
             overall_status = "critical"
 
         elif (
-            violation["severity"] == "warning"
+            violation.severity == Severity.WARNING
             and overall_status != "critical"
         ):
             overall_status = "warning"
 
+    score = max(0, 100 - sum(SEVERITY_WEIGHTS[v.severity] for v in violations))
+
     result = {
         "device": config_file.stem,
+        "score": score,
         "status": overall_status,
-        "violations": violations,
+        "violations": [v.to_dict() for v in violations],
     }
 
     return result
@@ -77,7 +81,7 @@ def main():
             f"Usage: {sys.argv[0]} "
             "<config> <policy>"
         )
-        sys.exit(1)
+        sys.exit(64)
 
     config_file = Path(sys.argv[1])
 
@@ -89,6 +93,9 @@ def main():
     )
 
     print(json.dumps(result, indent=2))
+
+    exit_codes = {"ok": 0, "warning": 1, "critical": 2}
+    sys.exit(exit_codes[result["status"]])
 
 
 if __name__ == "__main__":

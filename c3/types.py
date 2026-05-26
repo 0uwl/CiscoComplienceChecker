@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from enum import Enum
 from typing import TypedDict, Literal
 
@@ -11,6 +11,13 @@ class Severity(str, Enum):
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
+
+
+SEVERITY_WEIGHTS: dict["Severity", int] = {
+    Severity.CRITICAL: 50,
+    Severity.WARNING: 10,
+    Severity.INFO: 2,
+}
 
 
 #
@@ -73,6 +80,9 @@ class Violation:
     example: str
 
     scope: str
+    
+    def to_dict(self):
+        return asdict(self)
 
 
 #
@@ -82,6 +92,8 @@ class Violation:
 @dataclass(slots=True)
 class ComplianceResult:
     device: str
+
+    score: int
 
     status: Severity | Literal["ok"]
 
