@@ -56,9 +56,11 @@ Each violation deducts points from a starting score of 100, floored at 0:
 
 | Severity   | Deduction |
 |------------|-----------|
-| `critical` | 50        |
+| `critical` | 100       |
 | `warning`  | 10        |
-| `info`     | 2         |
+| `info`     | 0         |
+
+A single critical violation drops the score to 0 and the check fails. Warnings accumulate — 10 or more warnings also reduce the score to 0. Info violations are reported but do not affect the score.
 
 ## Policy file format
 
