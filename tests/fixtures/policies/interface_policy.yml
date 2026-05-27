@@ -1,0 +1,71 @@
+policies:
+  required:
+    interfaces:
+      scope: interfaces
+
+      rules:
+
+        client_access:
+          severity: warning
+          conditions:
+            all:
+              - not_pattern: '^ description .*\(no sticky\).*'
+            any:
+              - pattern: '^ description .*[Cc]lient.*'
+              - pattern: '^ description .*[Aa]ccess.*'
+          match:
+            all:
+              - pattern: '^ spanning-tree portfast$'
+              - pattern: '^ spanning-tree bpduguard enable$'
+              - pattern: '^ switchport mode access$'
+              - pattern: '^ switchport port-security$'
+              - pattern: '^ switchport nonegotiate$'
+              - pattern: '^ switchport port-security mac-address sticky$'
+          message: >
+            Client access interfaces require portfast, bpduguard, mode access,
+            port-security, nonegotiate, and port-security mac-address sticky
+          example: |
+            interface GigabitEthernet0/1
+             description Client access vlan 100
+             spanning-tree portfast
+             spanning-tree bpduguard enable
+             switchport mode access
+             switchport port-security
+             switchport nonegotiate
+             switchport port-security mac-address sticky
+
+        protected_port:
+          severity: warning
+          conditions:
+            all:
+              - pattern: '^ description .*\(protected\).*'
+          match:
+            all:
+              - pattern: '^ switchport protected$'
+          message: >
+            Interfaces marked as protected must enable switchport protected
+          example: |
+            interface GigabitEthernet0/1
+             description Core link (protected)
+             switchport protected
+
+        unused_port:
+          severity: warning
+          conditions:
+            all:
+              - pattern: '^ shutdown$'
+              - not_pattern: '^ switchport access vlan 4000$'
+          match:
+            all:
+              - pattern: '^ description UNUSED$'
+              - pattern: '^ switchport mode access$'
+              - pattern: '^ switchport access vlan 4000$'
+              - pattern: '^ shutdown$'
+          message: >
+            Shutdown interfaces must be moved to the unused VLAN with description UNUSED
+          example: |
+            interface GigabitEthernet0/1
+             description UNUSED
+             switchport mode access
+             switchport access vlan 4000
+             shutdown
