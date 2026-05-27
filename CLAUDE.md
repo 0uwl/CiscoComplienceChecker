@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+Must be run inside the local .venv/ virtual environment
+
 Install dependencies:
 ```
 pip install -r requirements.txt
@@ -21,7 +23,7 @@ python3 -m pytest tests/test_evaluator.py
 
 Run the compliance checker:
 ```
-python -m c3.main <config.cfg> <policy.yml>
+python3 -m c3.main <config.cfg> <policy.yml>
 ```
 
 ## Architecture

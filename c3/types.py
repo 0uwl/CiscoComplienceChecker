@@ -1,6 +1,6 @@
 from dataclasses import dataclass, asdict
 from enum import Enum
-from typing import TypedDict, Literal
+from typing import TypedDict, Literal, Any
 
 
 #
@@ -14,9 +14,9 @@ class Severity(str, Enum):
 
 
 SEVERITY_WEIGHTS: dict["Severity", int] = {
-    Severity.CRITICAL: 50,
+    Severity.CRITICAL: 100,
     Severity.WARNING: 10,
-    Severity.INFO: 2,
+    Severity.INFO: 0,
 }
 
 
@@ -81,8 +81,27 @@ class Violation:
 
     scope: str
     
-    def to_dict(self):
-        return asdict(self)
+    def to_dict(self) -> "ViolationDict":
+        return asdict(self)  # type: ignore[return-value]
+
+
+#
+# Serialised report types
+#
+
+class ViolationDict(TypedDict):
+    rule: str
+    severity: str
+    message: str
+    example: str
+    scope: str
+
+
+class ComplianceReport(TypedDict):
+    device: str
+    score: int
+    status: Literal["ok", "warning", "critical"]
+    violations: list[ViolationDict]
 
 
 #

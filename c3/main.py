@@ -9,26 +9,11 @@ from ciscoconfparse2 import CiscoConfParse
 
 from c3.loader import load_rules
 from c3.evaluator import evaluate_rule
-from c3.types import Violation, Severity, SEVERITY_WEIGHTS
+from c3.types import ComplianceReport, Violation, Severity, SEVERITY_WEIGHTS
+from typing import Literal
 
 
-def evaluate_config(config_file, policy_file):
-    """Evaluate a Cisco IOS config file against a policy file.
-
-    Parses the config, loads all rules from the policy, runs each rule through
-    the evaluator, and aggregates the results into a compliance report.
-
-    Args:
-        config_file (Path): Path to the Cisco IOS .cfg file.
-        policy_file (Path): Path to the YAML policy file.
-
-    Returns:
-        dict: Compliance report with keys:
-            - device (str): Stem of the config filename.
-            - status (str): Worst severity seen ("ok", "warning", or "critical").
-            - violations (list[dict]): Serialised Violation instances.
-    """
-
+def evaluate_config(config_file: Path, policy_file: Path) -> ComplianceReport:
     parse = CiscoConfParse(str(config_file))
 
     rules = load_rules(policy_file)
@@ -41,7 +26,7 @@ def evaluate_config(config_file, policy_file):
             evaluate_rule(parse, rule)
         )
 
-    overall_status = "ok"
+    overall_status: Literal["ok", "warning", "critical"] = "ok"
 
     for violation in violations:
 
@@ -56,32 +41,20 @@ def evaluate_config(config_file, policy_file):
 
     score = max(0, 100 - sum(SEVERITY_WEIGHTS[v.severity] for v in violations))
 
-    result = {
-        "device": config_file.stem,
-        "score": score,
-        "status": overall_status,
-        "violations": [v.to_dict() for v in violations],
-    }
-
-    return result
+    return ComplianceReport(
+        device=config_file.stem,
+        score=score,
+        status=overall_status,
+        violations=[v.to_dict() for v in violations],
+    )
 
 
-def scan_directory(dir_path, policy_file):
-    """Evaluate every .cfg file found directly inside dir_path.
-
-    Args:
-        dir_path (Path): Directory to search for .cfg files.
-        policy_file (Path): Path to the YAML policy file.
-
-    Returns:
-        list[dict]: One compliance report dict per discovered file, sorted by
-            device name.
-    """
+def scan_directory(dir_path: Path, policy_file: Path) -> list[ComplianceReport]:
     cfg_files = sorted(Path(dir_path).glob("*.cfg"))
     return [evaluate_config(cfg, policy_file) for cfg in cfg_files]
 
 
-def _worst_exit_code(results):
+def _worst_exit_code(results: list[ComplianceReport]) -> int:
     statuses = {r["status"] for r in results}
     if "critical" in statuses:
         return 2

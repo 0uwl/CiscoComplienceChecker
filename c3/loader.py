@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import yaml
 
 from c3.types import (
@@ -43,7 +45,7 @@ def _normalize_block(block: dict, add_indent: bool) -> dict:
 
 
 def load_rules(
-    policy_file: str,
+    policy_file: Path | str,
 ) -> list[Rule]:
     """Load and normalise all rules from a YAML policy file.
 
