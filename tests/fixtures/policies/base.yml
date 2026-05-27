@@ -1,0 +1,11 @@
+policies:
+  required:
+    base-global:
+      scope: global
+      rules:
+        aaa-model:
+          severity: warning
+          match:
+            all:
+              - pattern: '^aaa new-model$'
+          message: An AAA model must be defined
