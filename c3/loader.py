@@ -7,6 +7,8 @@ from c3.types import (
     Severity,
 )
 
+_SENTINEL: frozenset[Path] = frozenset()
+
 
 def _add_child_indent(pattern: str) -> str:
     """Insert one space after a leading '^' if not already present.
@@ -46,6 +48,7 @@ def _normalize_block(block: dict, add_indent: bool) -> dict:
 
 def load_rules(
     policy_file: Path | str,
+    _seen: frozenset[Path] = _SENTINEL,
 ) -> list[Rule]:
     """Load and normalise all rules from a YAML policy file.
 
@@ -53,17 +56,32 @@ def load_rules(
     (policies → required|forbidden → policy_name → rules) into a flat list
     of Rule dataclass instances ready for evaluation.
 
+    Files may declare a top-level ``include`` list of paths (relative to the
+    file's own directory). Included files are loaded recursively and their
+    rules are prepended to the rules defined in the current file. Circular
+    includes raise ``ValueError``.
+
     Args:
-        policy_file (str): Path to the YAML policy file.
+        policy_file: Path to the YAML policy file.
 
     Returns:
         list[Rule]: Flat list of normalised Rule instances.
     """
+    policy_file = Path(policy_file).resolve()
+
+    if policy_file in _seen:
+        raise ValueError(f"Circular include detected: {policy_file}")
+
+    _seen = _seen | {policy_file}
 
     with open(policy_file) as f:
         raw = yaml.safe_load(f)
 
     rules: list[Rule] = []
+
+    for include_path in raw.get("include", []):
+        included = (policy_file.parent / include_path).resolve()
+        rules.extend(load_rules(included, _seen))
 
     policies = raw.get("policies", {})
 
@@ -107,4 +125,10 @@ def load_rules(
 
                 rules.append(rule)
 
-    return rules
+    # Child-file rules are appended after included rules, so iterating in
+    # order and keeping the last definition per (policy_name, rule_name) means
+    # the current file's version always wins over any inherited version.
+    seen: dict[tuple[str, str], Rule] = {}
+    for rule in rules:
+        seen[(rule.policy_name, rule.rule_name)] = rule
+    return list(seen.values())

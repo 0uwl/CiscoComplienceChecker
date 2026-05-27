@@ -103,6 +103,60 @@ policies:
 
 Patterns use Python `re` syntax. Use single-quoted strings in YAML to preserve backslash escapes (e.g. `'^shutdown$'`). For child-line scopes (`interfaces`, `vty`) the loader automatically inserts the required leading space after `^` — policy authors do not need to add it.
 
+## Extending policies
+
+Policy files can include other policy files, allowing a base policy to be shared across many devices while child policies add or override rules for specific roles.
+
+### Including a base policy
+
+Add a top-level `include` list to any policy file. Paths are relative to the including file's location.
+
+```yaml
+# ios-access.yml
+include:
+  - ios.yml          # loaded first; its rules become the base
+
+policies:
+  required:
+    access-switch:
+      scope: interfaces
+      rules:
+        storm-control:
+          severity: warning
+          match:
+            all:
+              - pattern: '^storm-control broadcast level 20$'
+          message: Storm control must be configured on access ports
+```
+
+Rules from `ios.yml` are evaluated first, followed by the rules defined in `ios-access.yml`. Multiple files can be listed under `include` and they are loaded in order. Includes can be nested — a base policy can itself include another base.
+
+Circular includes (A → B → A) are detected at load time and raise an error.
+
+### Overriding inherited rules
+
+A child policy can replace any rule it inherits by redefining it under the same `policy_name` and `rule_name`. The child's version is used and the inherited version is discarded — no duplicate evaluation.
+
+```yaml
+# ios-critical.yml
+include:
+  - ios.yml
+
+policies:
+  required:
+    global:              # same policy_name as in ios.yml
+      scope: global
+      rules:
+        aaa-model:       # same rule_name — overrides the inherited rule
+          severity: critical   # escalated from warning in ios.yml
+          match:
+            all:
+              - pattern: '^aaa new-model$'
+          message: AAA model is mandatory and its absence is a critical failure
+```
+
+Any rule that is not redefined is inherited unchanged.
+
 ## Running tests
 
 ```bash
@@ -124,3 +178,4 @@ Add a `--format junit` flag that emits a JUnit XML report in addition to (or ins
 ### Configurable fail threshold
 
 Add a `--fail-on <severity>` flag (default: `warning`) so CI pipelines can choose the minimum severity that produces a non-zero exit code. Setting `--fail-on critical` keeps the exit code `0` for warning-only results, allowing pipelines to report warnings without blocking a merge.
+

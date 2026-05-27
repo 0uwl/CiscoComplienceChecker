@@ -1,5 +1,11 @@
-from c3.loader import _add_child_indent, _normalize_block
+from pathlib import Path
+
+import pytest
+
+from c3.loader import _add_child_indent, _normalize_block, load_rules
 from c3.types import Rule
+
+FIXTURES = Path(__file__).parent / "fixtures" / "policies"
 
 
 # ── existing ──────────────────────────────────────────────────────────────────
@@ -103,3 +109,49 @@ def test_vty_scope_match_patterns_indented(rules):
     exec_rule = next(r for r in rules if r.rule_name == "exec-timeout")
     pattern = exec_rule.match["all"][0]["pattern"]
     assert pattern.startswith("^ ")
+
+
+# ── include ───────────────────────────────────────────────────────────────────
+
+def test_include_merges_rules_from_base():
+    rules = load_rules(FIXTURES / "child.yml")
+    rule_names = [r.rule_name for r in rules]
+    assert "aaa-model" in rule_names       # from base.yml
+    assert "no-http-server" in rule_names  # defined in child.yml
+
+
+def test_include_base_rules_come_first():
+    rules = load_rules(FIXTURES / "child.yml")
+    rule_names = [r.rule_name for r in rules]
+    assert rule_names.index("aaa-model") < rule_names.index("no-http-server")
+
+
+def test_include_base_only_loads_its_own_rules():
+    rules = load_rules(FIXTURES / "base.yml")
+    assert len(rules) == 1
+    assert rules[0].rule_name == "aaa-model"
+
+
+def test_circular_include_raises():
+    with pytest.raises(ValueError, match="Circular include"):
+        load_rules(FIXTURES / "circular_a.yml")
+
+
+# ── override ──────────────────────────────────────────────────────────────────
+
+def test_override_child_rule_replaces_base():
+    rules = load_rules(FIXTURES / "override_child.yml")
+    aaa_rules = [r for r in rules if r.rule_name == "aaa-model"]
+    assert len(aaa_rules) == 1
+
+
+def test_override_child_severity_wins():
+    rules = load_rules(FIXTURES / "override_child.yml")
+    aaa_rule = next(r for r in rules if r.rule_name == "aaa-model")
+    assert aaa_rule.severity.value == "critical"
+
+
+def test_override_child_message_wins():
+    rules = load_rules(FIXTURES / "override_child.yml")
+    aaa_rule = next(r for r in rules if r.rule_name == "aaa-model")
+    assert "critical in this environment" in aaa_rule.message

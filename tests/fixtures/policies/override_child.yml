@@ -1,0 +1,14 @@
+include:
+  - base.yml
+
+policies:
+  required:
+    base-global:
+      scope: global
+      rules:
+        aaa-model:
+          severity: critical
+          match:
+            all:
+              - pattern: '^aaa new-model$'
+          message: AAA model is critical in this environment

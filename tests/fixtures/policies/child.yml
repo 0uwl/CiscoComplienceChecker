@@ -1,0 +1,14 @@
+include:
+  - base.yml
+
+policies:
+  forbidden:
+    web-server:
+      scope: global
+      rules:
+        no-http-server:
+          severity: critical
+          match:
+            all:
+              - pattern: '^ip http server$'
+          message: The HTTP server must be disabled

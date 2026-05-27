@@ -1,0 +1,14 @@
+include:
+  - circular_b.yml
+
+policies:
+  required:
+    placeholder:
+      scope: global
+      rules:
+        dummy:
+          severity: info
+          match:
+            all:
+              - pattern: '^hostname .*$'
+          message: placeholder

@@ -23,12 +23,12 @@ def test_score_is_100_when_fully_compliant():
 
 
 def test_score_deducts_per_severity():
-    # telnet.cfg: 3 warnings (-30) + 1 critical (-50) = 20
+    # warnings_only.cfg: 3 warnings × -10 each = 70
     result = evaluate_config(
-        BASE_DIR / "fixtures" / "configs" / "telnet.cfg",
+        BASE_DIR / "fixtures" / "configs" / "warnings_only.cfg",
         POLICY,
     )
-    assert result["score"] == 20
+    assert result["score"] == 70
 
 
 def test_score_clamped_to_zero():
