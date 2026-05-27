@@ -11,12 +11,12 @@ pip install -r requirements.txt
 
 Run all tests:
 ```
-pytest
+python3 -m pytest
 ```
 
 Run a single test file:
 ```
-pytest tests/test_evaluator.py
+python3 -m pytest tests/test_evaluator.py
 ```
 
 Run the compliance checker:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -65,37 +66,63 @@ def evaluate_config(config_file, policy_file):
     return result
 
 
-def main():
-    """Entry point for the CLI.
+def scan_directory(dir_path, policy_file):
+    """Evaluate every .cfg file found directly inside dir_path.
 
-    Expects exactly two positional arguments: the path to a Cisco IOS config
-    file and the path to a YAML policy file. Prints the compliance report as
-    indented JSON to stdout.
+    Args:
+        dir_path (Path): Directory to search for .cfg files.
+        policy_file (Path): Path to the YAML policy file.
 
     Returns:
-        None
+        list[dict]: One compliance report dict per discovered file, sorted by
+            device name.
     """
+    cfg_files = sorted(Path(dir_path).glob("*.cfg"))
+    return [evaluate_config(cfg, policy_file) for cfg in cfg_files]
 
-    if len(sys.argv) != 3:
-        print(
-            f"Usage: {sys.argv[0]} "
-            "<config> <policy>"
-        )
-        sys.exit(64)
 
-    config_file = Path(sys.argv[1])
+def _worst_exit_code(results):
+    statuses = {r["status"] for r in results}
+    if "critical" in statuses:
+        return 2
+    if "warning" in statuses:
+        return 1
+    return 0
 
-    policy_file = Path(sys.argv[2])
 
-    result = evaluate_config(
-        config_file,
-        policy_file,
+def main():
+    """Entry point for the CLI."""
+
+    parser = argparse.ArgumentParser(
+        prog="c3",
+        description="Cisco Compliance Checker",
     )
+    parser.add_argument(
+        "--dir",
+        metavar="PATH",
+        help="scan every .cfg file in PATH instead of a single config",
+    )
+    parser.add_argument("positional", nargs="*", metavar="ARG")
 
-    print(json.dumps(result, indent=2))
+    args = parser.parse_args()
 
-    exit_codes = {"ok": 0, "warning": 1, "critical": 2}
-    sys.exit(exit_codes[result["status"]])
+    if args.dir:
+        if len(args.positional) != 1:
+            parser.error("with --dir, provide exactly one argument: <policy.yml>")
+        policy_file = Path(args.positional[0])
+        dir_path = Path(args.dir)
+        results = scan_directory(dir_path, policy_file)
+        print(json.dumps(results, indent=2))
+        sys.exit(_worst_exit_code(results))
+    else:
+        if len(args.positional) != 2:
+            parser.error("provide <config.cfg> <policy.yml>")
+        config_file = Path(args.positional[0])
+        policy_file = Path(args.positional[1])
+        result = evaluate_config(config_file, policy_file)
+        print(json.dumps(result, indent=2))
+        exit_codes = {"ok": 0, "warning": 1, "critical": 2}
+        sys.exit(exit_codes[result["status"]])
 
 
 if __name__ == "__main__":

@@ -10,11 +10,19 @@ pip install -r requirements.txt
 
 ## Usage
 
+Single device:
+
 ```bash
 python -m c3.main <config.cfg> <policy.yml>
 ```
 
-The report is printed to stdout as JSON:
+All `.cfg` files in a directory (combined report):
+
+```bash
+python -m c3.main --dir <path> <policy.yml>
+```
+
+The report is printed to stdout as JSON. For a single device this is an object; for `--dir` it is an array of per-device objects:
 
 ```json
 {
@@ -107,10 +115,6 @@ pytest
 
 Abstract the parser layer so that the same YAML policies can be evaluated against Junos configurations as well as IOS. The `ciscoconfparse2` dependency is IOS-specific; this would require either a Junos-capable parser or a normalisation layer that maps Junos config structure into the same scope/child-line model C3 already uses.
 
-### Multi-file / directory scan
-
-Add a `--dir <path>` flag that discovers and evaluates every `.cfg` file in a directory, producing a combined JSON report (array of per-device results) and a single aggregate exit code. This is a prerequisite for clean GitLab CI integration — without it the CI script must loop externally and loses a combined score.
-
 ### JUnit XML output
 
 Add a `--format junit` flag that emits a JUnit XML report in addition to (or instead of) JSON. GitLab's native test-report feature parses JUnit XML and surfaces each violation as a failed test case directly in the merge request pipeline UI, without operators needing to inspect raw JSON artifacts.
@@ -118,11 +122,3 @@ Add a `--format junit` flag that emits a JUnit XML report in addition to (or ins
 ### Configurable fail threshold
 
 Add a `--fail-on <severity>` flag (default: `warning`) so CI pipelines can choose the minimum severity that produces a non-zero exit code. Setting `--fail-on critical` keeps the exit code `0` for warning-only results, allowing pipelines to report warnings without blocking a merge.
-
-### Remediation script output
-
-Add a `--remediate` flag that renders the `example` field from each violation into a `conf t` / `end` script the operator can paste directly into the device. The `example` field already exists on every rule; this is purely a formatting pass over the violation list.
-
-### Policy tagging and filtering
-
-Allow rules to carry one or more tags (e.g. `tags: [cis, pci-dss]`) and add a `--tags <tag,...>` CLI flag to run only the matching subset of rules. Useful when different teams own different policy subsets or when a specific audit requires only a defined framework's controls.
