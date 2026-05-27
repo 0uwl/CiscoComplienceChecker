@@ -6,6 +6,42 @@ from c3.types import (
 )
 
 
+def _add_child_indent(pattern: str) -> str:
+    """Insert one space after a leading '^' if not already present.
+
+    Child lines in IOS configs are indented by one space. Patterns anchored
+    with '^' must therefore start with '^ ' to match. This function lets
+    policy authors omit the space; the loader adds it automatically.
+    Patterns that already have '^ ', use no '^' anchor, or are empty are
+    returned unchanged.
+    """
+    if pattern.startswith("^") and not pattern.startswith("^ "):
+        return "^ " + pattern[1:]
+    return pattern
+
+
+def _normalize_block(block: dict, add_indent: bool) -> dict:
+    """Return a copy of a match/conditions block with child-line indentation applied.
+
+    Walks every item in every 'all'/'any' list and passes 'pattern' and
+    'not_pattern' values through _add_child_indent when add_indent is True.
+    """
+    if not block or not add_indent:
+        return block
+    result = {}
+    for key, items in block.items():
+        normalized = []
+        for item in items:
+            new_item = dict(item)
+            if "pattern" in new_item:
+                new_item["pattern"] = _add_child_indent(new_item["pattern"])
+            if "not_pattern" in new_item:
+                new_item["not_pattern"] = _add_child_indent(new_item["not_pattern"])
+            normalized.append(new_item)
+        result[key] = normalized
+    return result
+
+
 def load_rules(
     policy_file: str,
 ) -> list[Rule]:
@@ -34,6 +70,7 @@ def load_rules(
         for policy_name, policy_data in policy_groups.items():
 
             scope = policy_data["scope"]
+            is_child_scope = scope != "global"
 
             for rule_name, rule_data in policy_data.get("rules", {}).items():
 
@@ -48,13 +85,13 @@ def load_rules(
                             "warning",
                         )
                     ),
-                    conditions=rule_data.get(
-                        "conditions",
-                        {},
+                    conditions=_normalize_block(
+                        rule_data.get("conditions", {}),
+                        add_indent=True,
                     ),
-                    match=rule_data.get(
-                        "match",
-                        {},
+                    match=_normalize_block(
+                        rule_data.get("match", {}),
+                        add_indent=is_child_scope,
                     ),
                     message=rule_data.get(
                         "message",

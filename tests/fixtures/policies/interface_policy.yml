@@ -9,18 +9,18 @@ policies:
           severity: warning
           conditions:
             all:
-              - not_pattern: '^ description .*\(no sticky\).*'
+              - not_pattern: '^description .*\(no sticky\).*'
             any:
-              - pattern: '^ description .*[Cc]lient.*'
-              - pattern: '^ description .*[Aa]ccess.*'
+              - pattern: '^description .*[Cc]lient.*'
+              - pattern: '^description .*[Aa]ccess.*'
           match:
             all:
-              - pattern: '^ spanning-tree portfast$'
-              - pattern: '^ spanning-tree bpduguard enable$'
-              - pattern: '^ switchport mode access$'
-              - pattern: '^ switchport port-security$'
-              - pattern: '^ switchport nonegotiate$'
-              - pattern: '^ switchport port-security mac-address sticky$'
+              - pattern: '^spanning-tree portfast$'
+              - pattern: '^spanning-tree bpduguard enable$'
+              - pattern: '^switchport mode access$'
+              - pattern: '^switchport port-security$'
+              - pattern: '^switchport nonegotiate$'
+              - pattern: '^switchport port-security mac-address sticky$'
           message: >
             Client access interfaces require portfast, bpduguard, mode access,
             port-security, nonegotiate, and port-security mac-address sticky
@@ -38,10 +38,10 @@ policies:
           severity: warning
           conditions:
             all:
-              - pattern: '^ description .*\(protected\).*'
+              - pattern: '^description .*\(protected\).*'
           match:
             all:
-              - pattern: '^ switchport protected$'
+              - pattern: '^switchport protected$'
           message: >
             Interfaces marked as protected must enable switchport protected
           example: |
@@ -53,14 +53,14 @@ policies:
           severity: warning
           conditions:
             all:
-              - pattern: '^ shutdown$'
-              - not_pattern: '^ switchport access vlan 4000$'
+              - pattern: '^shutdown$'
+              - not_pattern: '^switchport access vlan 4000$'
           match:
             all:
-              - pattern: '^ description UNUSED$'
-              - pattern: '^ switchport mode access$'
-              - pattern: '^ switchport access vlan 4000$'
-              - pattern: '^ shutdown$'
+              - pattern: '^description UNUSED$'
+              - pattern: '^switchport mode access$'
+              - pattern: '^switchport access vlan 4000$'
+              - pattern: '^shutdown$'
           message: >
             Shutdown interfaces must be moved to the unused VLAN with description UNUSED
           example: |

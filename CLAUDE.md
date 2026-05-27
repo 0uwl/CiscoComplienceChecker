@@ -60,7 +60,7 @@ policies:
 
 - **`conditions`** — filters which objects within the scope are subject to the rule (e.g., only interfaces with "Client" in the description). All `pattern` entries use `re_search_children`.
 - **`match`** — the compliance check itself. For `required` rules a missing pattern is a violation; for `forbidden` rules a present pattern is a violation.
-- Use single-quoted regex strings in YAML to preserve backslash escapes. Child-line patterns must include the correct leading whitespace (e.g., `'^ shutdown$'`).
+- Use single-quoted regex strings in YAML to preserve backslash escapes (e.g., `'^shutdown$'`). Leading whitespace for child-line scopes (`interfaces`, `vty`) is added automatically by the loader — do not add it manually.
 
 ### Test fixtures
 

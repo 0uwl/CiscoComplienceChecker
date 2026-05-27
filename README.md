@@ -91,7 +91,7 @@ policies:
 - **`conditions`** — filters *which* objects within the scope are subject to the rule (e.g. only interfaces whose description contains "Client"). Objects that do not satisfy the conditions are silently skipped.
 - **`match`** — the compliance check itself. For `required` rules a missing pattern is a violation; for `forbidden` rules a present pattern is a violation.
 
-Patterns use Python `re` syntax. Use single-quoted strings in YAML to preserve backslash escapes. Child-line patterns must include the correct leading whitespace (e.g. `'^ shutdown$'`).
+Patterns use Python `re` syntax. Use single-quoted strings in YAML to preserve backslash escapes (e.g. `'^shutdown$'`). For child-line scopes (`interfaces`, `vty`) the loader automatically inserts the required leading space after `^` — policy authors do not need to add it.
 
 ## Running tests
 

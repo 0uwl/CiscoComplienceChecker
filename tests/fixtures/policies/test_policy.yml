@@ -1,6 +1,5 @@
 # NOTEs:
 #       - Use single quotes when defining regex patterns to allow for escape characters like '\'
-#       - You must add the correct amount of white spaces before a command inside a regex pattern check
 
 policies:
 
@@ -79,27 +78,27 @@ policies:
           conditions:
             # All patterns must match
             all:
-              - not_pattern: '^ description .*\(no sticky\).*'
+              - not_pattern: '^description .*\(no sticky\).*'
             # At least one pattern must match
             any:
-              - pattern: '^ description .*[Cc]lient.*'
-              - pattern: '^ description .*[Aa]ccess.*'
+              - pattern: '^description .*[Cc]lient.*'
+              - pattern: '^description .*[Aa]ccess.*'
           match:
             all:
-              - pattern: '^ spanning-tree portfast$'
-              - pattern: '^ spanning-tree bpduguard enable$'
-              - pattern: '^ switchport mode access$'
-              - pattern: '^ switchport port-security$'
-              - pattern: '^ switchport nonegotiate$'
-              - pattern: '^ switchport port-security mac-address sticky$'
+              - pattern: '^spanning-tree portfast$'
+              - pattern: '^spanning-tree bpduguard enable$'
+              - pattern: '^switchport mode access$'
+              - pattern: '^switchport port-security$'
+              - pattern: '^switchport nonegotiate$'
+              - pattern: '^switchport port-security mac-address sticky$'
 
         protected_port:
           conditions:
             all:
-              - pattern: '^ description .*\(protected\).*'
+              - pattern: '^description .*\(protected\).*'
           match:
             all:
-              - pattern: '^ switchport protected$'
+              - pattern: '^switchport protected$'
           severity: warning
           message: >
             Interfaces marked as protected must enable
@@ -112,15 +111,14 @@ policies:
           severity: warning
           conditions:
             all:
-              - pattern: '^ shutdown$'
-                # Must NOT contain pattern
-              - not_pattern: '^ switchport access vlan 4000$'
+              - pattern: '^shutdown$'
+              - not_pattern: '^switchport access vlan 4000$'
           match:
             all:
-              - pattern: '^ description UNUSED$'
-              - pattern: '^ switchport mode access$'
-              - pattern: '^ switchport access vlan 4000$'
-              - pattern: '^ shutdown$'
+              - pattern: '^description UNUSED$'
+              - pattern: '^switchport mode access$'
+              - pattern: '^switchport access vlan 4000$'
+              - pattern: '^shutdown$'
 
     vty:
       # This scope is used for VTY configuration
@@ -131,7 +129,7 @@ policies:
           severity: warning
           match:
             all:
-              - pattern: '^ exec timout 9 59$'
+              - pattern: '^exec timout 9 59$'
           message: >
             VTYs should have a timout defined for 9 minutes and 59 seconds
           example: |
@@ -162,7 +160,7 @@ policies:
           severity: critical
           match:
             all:
-              - pattern: '^ transport input telnet$'
+              - pattern: '^transport input telnet$'
           message: >
             Telnet must not be used. Use SSH instead
           example: |
