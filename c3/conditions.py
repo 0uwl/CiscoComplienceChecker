@@ -40,14 +40,14 @@ def evaluate_condition_block(
 
             if "pattern" in condition:
 
-                if not obj.re_search_children(
+                if not obj.find_child_objects(
                     condition["pattern"]
                 ):
                     return False
 
             if "not_pattern" in condition:
 
-                if obj.re_search_children(
+                if obj.find_child_objects(
                     condition["not_pattern"]
                 ):
                     return False
@@ -63,14 +63,14 @@ def evaluate_condition_block(
 
             if "pattern" in condition:
 
-                if obj.re_search_children(
+                if obj.find_child_objects(
                     condition["pattern"]
                 ):
                     matched = True
 
             if "not_pattern" in condition:
 
-                if not obj.re_search_children(
+                if not obj.find_child_objects(
                     condition["not_pattern"]
                 ):
                     matched = True
